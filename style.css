@@ -1,0 +1,197 @@
+
+html {
+  height: 100%;
+  margin: auto;
+  background-color: white;
+}
+
+body {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 20px;
+  background-color: rgb(26,171,224);
+	font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	font-weight: normal;
+	color: white;
+	margin-top: 0;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid rgb(110,110,112);
+  border-radius: 4px;
+}
+
+div {
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+h1 {
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+ol {
+  text-align: left;
+}
+li {
+  padding: 10px;
+}
+
+button {
+  border-color: rgb(28,117,190);
+  background-color: rgb(28,117,190);
+  color: white;
+  border-radius: 5px;
+  height: 30px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+button.input-helper {
+  background-color: rgb(190,190,190);
+  border-color: rgb(190,190,190);
+  color: rgb(110,110,112);
+  margin-left: 3px;
+}
+
+button:disabled{
+  background-color: rgb(190,190,190);
+  border-color: rgb(190,190,190);
+  color: white;
+}
+
+input[type='text'], input[type='password']{
+  background-color: white;
+  color: rgb(110,110,112);
+  border-color: white;
+  border-radius: 5px;
+  height: 25px;
+  text-align: center;
+  font-size: 15px;
+}
+
+input:disabled {
+  background-color: rgb(190,190,190);
+  border-color: rgb(190,190,190);
+}
+
+input[type='radio']{
+  position: relative;
+  bottom: -0.33em;
+  margin:0;
+  border:0;
+  height: 1.5em;
+  width: 15%;
+}
+
+label {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  padding-left: 5%;
+  display: inline-block;
+  width: 80%;
+  text-align: left;
+}
+
+input[type='radio']:checked+label {
+  font-weight: bold;
+  color: rgb(28,117,190);
+}
+
+.scanning-error {
+  font-weight: bold;
+  text-align: center;
+}
+
+.radio-div {
+  box-sizing: border-box;
+  margin: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: white;
+  color: rgb(110,110,112);
+  border: 1px solid rgb(110,110,112);
+  border-radius: 3px;
+  width: 100%;
+  padding: 5px;
+}
+
+#networks-div {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+#device-id {
+  text-align: center;
+}
+
+#scan-button {
+  min-width: 100px;
+}
+
+#connect-button {
+  display: block;
+  min-width: 100px;
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+#password{
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* CSS pour top menu. */
+
+body {font-family: "Lato", sans-serif;}
+
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #ccc;
+	background-color: #f1f1f1;
+	border-radius: 5px;
+}
+
+/* Float the list items side by side */
+ul.tab li {float: left;}
+
+/* Style the links inside the list items */
+ul.tab li a {
+    display: inline-block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+	font-weight: bold;
+}
+
+/* Change background color of links on hover */
+ul.tab li a:hover {
+    background-color: #ddd;
+	border-radius: 5px;
+}
+
+/* Create an active/current tablink class */
+ul.tab li a:focus, .active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
