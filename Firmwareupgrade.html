@@ -7,9 +7,12 @@
 </head>
 <body>
  <p><b>Select file for firmware upgrade</b></p>
- <form enctype="multipart/form-data" method="post" action="upgrade">
-   <input id="fileupload" name="myfile" type="file" />
-   <p><input type="submit" value="Begin upgrade" id="submit"/>
+ <form id="myForm">
+  <p>
+    <input id="i2" name="myFile" type="file">
+  </p>
+  <input type="submit" value="Begin upgrade" id="submit"/>
 </form>
+<script src='scriptmini.js'></script>
 </body>
 </html> 

@@ -1,0 +1,25 @@
+#include "Particle.h"
+
+const uint8_t bigDummyBuffer[100000] = "";
+
+void setup()
+{
+	Serial.begin(115200);
+	while (!Serial.available()) Particle.process();
+	Serial.printlnf("Upgrade worked!!!! %s %s", __TIME__, __DATE__);
+	delay(500);
+	System.dfu();
+}
+
+void loop()
+{
+	// Dummy code to increase application size for SoftAP Tests.
+	char dummyRead;
+	for(int i = 0; i < sizeof(bigDummyBuffer); i++)
+	{
+		dummyRead = bigDummyBuffer[i];
+		dummyRead += dummyRead;
+		Serial.printlnf("dummy: %d", dummyRead);
+	}
+	
+}

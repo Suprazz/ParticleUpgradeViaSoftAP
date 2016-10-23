@@ -3,13 +3,11 @@
 #include "Particle.h"
 #include "softap_http.h"
 #include "system_update.h"
-#include "spiffs.h"
 #include "myFileSystem.h"
 
+uint16_t destinationFile;
 
-spiffs_file destinationFile;
-
-
+#define UPGRADE_FILE_NAME "upgrade"
 SYSTEM_THREAD(ENABLED);
 
 struct Page
@@ -19,20 +17,21 @@ struct Page
     const char* data;
 };
 
-const char index_html[] = "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'><title>Firmware upgrade</title><link rel='stylesheet' type='text/css' href='style.css'></head><body> <p><b>Select file for firmware upgrade</b></p> <form id=\"uploadbanner\" enctype=\"multipart/form-data\" method=\"post\" action=\"upgrade\"> <input id=\"fileupload\" name=\"myfile\" type=\"file\" /> <p><input type=\"submit\" value=\"Begin upgrade\" id=\"submit\" /></form></body></html>";
+const char index_html[] = "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'><title>Firmware upgrade</title><link rel='stylesheet' type='text/css' href='style.css'></head><body> <p><b>Select file for firmware upgrade</b></p> <form id=\"myForm\"> <p> <input id=\"i2\" name=\"myFile\" type=\"file\"> </p> <input type=\"submit\" value=\"Begin upgrade\" id=\"submit\"/></form><script src='script.js'></script></body></html>";
 const char style_css[] = "html{height:100%;margin:auto;background-color:white}body{box-sizing:border-box;min-height:100%;padding:20px;background-color:#1aabe0;font-family:'Lucida Sans Unicode','Lucida Grande',sans-serif;font-weight:normal;color:white;margin-top:0;margin-left:auto;margin-right:auto;margin-bottom:0;max-width:400px;text-align:center;border:1px solid #6e6e70;border-radius:4px}div{margin-top:25px;margin-bottom:25px}h1{margin-top:25px;margin-bottom:25px}button{border-color:#1c75be;background-color:#1c75be;color:white;border-radius:5px;height:30px;font-size:15px;font-weight:bold}button.input-helper{background-color:#bebebe;border-color:#bebebe;color:#6e6e70;margin-left:3px}button:disabled{background-color:#bebebe;border-color:#bebebe;color:white}input[type='text'],input[type='password']{background-color:white;color:#6e6e70;border-color:white;border-radius:5px;height:25px;text-align:center;font-size:15px}input:disabled{background-color:#bebebe;border-color:#bebebe}input[type='radio']{position:relative;bottom:-0.33em;margin:0;border:0;height:1.5em;width:15%}label{padding-top:7px;padding-bottom:7px;padding-left:5%;display:inline-block;width:80%;text-align:left}input[type='radio']:checked+label{font-weight:bold;color:#1c75be}.scanning-error{font-weight:bold;text-align:center}.radio-div{box-sizing:border-box;margin:2px;margin-left:auto;margin-right:auto;background-color:white;color:#6e6e70;border:1px solid #6e6e70;border-radius:3px;width:100%;padding:5px}#networks-div{margin-left:auto;margin-right:auto;text-align:left}#device-id{text-align:center}#scan-button{min-width:100px}#connect-button{display:block;min-width:100px;margin-top:10px;margin-left:auto;margin-right:auto;margin-bottom:20px}#password{margin-top:20px;margin-bottom:10px}";
-
+const char script_js[] = "window.addEventListener(\"load\",function(){function d(){function i(){b=\"\",b+=\"------\"+e+\"\\r\\n\",b+='content-disposition: form-data; name=\"'+a.dom.name+'\"; filename=\"'+a.dom.files[0].name+'\"\\r\\n',b+=\"Content-Type: \"+a.dom.files[0].type+\"\\r\\n\",b+=\"FileSize: \"+a.binary.length+\"\\r\\n\",b+=\"Part: \"+g+\"\\r\\n\",g+=1,b+=\"\\r\\n\";var d=0;d=a.binary.length-f>h?h:a.binary.length-f,b+=a.binary.substr(f,d),f+=d,b+=\"\\r\\n------\"+e+\"--\\r\\n\",c.open(\"POST\",\"http://192.168.0.1/upgrade\"),c.setRequestHeader(\"Content-Type\",\"multipart/form-data; boundary=\"+e),c.sendAsBinary(b)}if(!a.binary&&a.dom.files.length>0)return void setTimeout(d,10);var c=new XMLHttpRequest,e=\"blob\",f=0,g=1,h=6e4;c.addEventListener(\"load\",function(b){f<a.binary.length&&i()}),c.addEventListener(\"error\",function(a){alert(\"Oups! Something goes wrong.\")}),a.dom.files[0]&&f<a.binary.length&&i()}var a={dom:document.getElementById(\"i2\"),binary:null,length:0},b=\"\",c=new FileReader;c.addEventListener(\"load\",function(){a.binary=c.result}),a.dom.files[0]&&(c.readAsBinaryString(a.dom.files[0]),a.length=c.length),a.dom.addEventListener(\"change\",function(){c.readyState===FileReader.LOADING&&c.abort(),c.readAsBinaryString(a.dom.files[0]),a.length=c.length}),document.getElementById(\"myForm\").addEventListener(\"submit\",function(a){a.preventDefault(),d()}),XMLHttpRequest.prototype.sendAsBinary=function(a){function b(a){return 255&a.charCodeAt(0)}var c=Array.prototype.map.call(a,b),d=new Uint8Array(c);this.send(d.buffer)}});";
 const char txtPlain[] = "text/plain";
 
 Page myPages[] = {
      { "/index.html", "text/html", index_html },
      { "/style.css", "text/css", style_css },
+	 { "/script.js", "application/javascript", script_js },
      { nullptr }
 };
 
 FileTransfer::Descriptor file;
 char upgradeDevice = 0;
-
+static int fileLength;
 void ExitMyPage(ResponseCallback* cb, void* cbArg, Writer* result, const char * str)
 {
 	Serial.println(str);
@@ -42,6 +41,9 @@ void ExitMyPage(ResponseCallback* cb, void* cbArg, Writer* result, const char * 
 
 void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Writer* result, void* reserved)
 {
+	static int partCount;
+	static int fileBytesReceived;
+
 	String urlString = String(url);
     Serial.printlnf("handling page %s", url);
 	
@@ -52,11 +54,22 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
         return;
     }
 
+	if (strcmp(url, myPages[0].url) == 0) {
+		// Index
+		partCount = 0;
+	}
+
 	if (strcmp(url, "/upgrade") == 0)
 	{
+		if (partCount == 0)
+		{
+			fileLength = 0;
+			fileBytesReceived = 0;
+		}
+
 		// Here is the output I should get
 		/*
-		POST Data: ------WebKitFormBoundaryEEbsS0VLVz50qOeT
+		POST Data: ------blob
 		Content-Disposition: form-data; name="myfile"; filename="binfile"
 		Content-Type: application/octet-stream
 
@@ -72,7 +85,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 		Serial.printlnf("Length = %d, Bytes left: %d", datalength, body->bytes_left);
 	
 		// Check if the first caracters are what we are expecting.
-		str = strstr((const char *)&contentData[0], "------WebKitFormBoundary");
+		str = strstr((const char *)&contentData[0], "------"); 
 		if (str == NULL)
 		{
 
@@ -81,18 +94,20 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			return;
 		}
 
+		// Debugging
+		//Serial.println("Debug:");
+		//Serial.write(contentData, datalength);
+
 		// Find length of first line : webkitformboundary....
 		str = strstr((const char *)contentData, "\r\n");
 		
 		if (str != NULL)
 		{
-			// I dont know if the first line is always the same length and I need it to 
-			// figure out the length of the last line so this is why I do this.
-			// Normal length is 40 without \r\n 
+			// I need figure out the length of the last line so this is why I do this.
 			webkitformboundaryLength = str - (char*)contentData; // Length of the first line.
 			webkitformboundaryLength += 2; // Including the \r\n
 			// For the ending line
-			webkitformboundaryLength += 2; // 2 caracters foe the "--" padding on the final line.
+			webkitformboundaryLength += 2; // 2 characters for the "--" padding on the final line.
 			webkitformboundaryLength += 2; // For the \r\n before the ending line
 			Serial.printlnf("Webkitform length = %d", webkitformboundaryLength);
 		}
@@ -102,7 +117,36 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			return;
 		}
 	
-		// uncomment and complete to get the file name.
+		const char filesize[] = "FileSize: ";
+		str = strstr((const char *)contentData, filesize);
+		if (str != NULL)
+		{
+			
+			str += sizeof(filesize)-1;
+			sscanf(str, "%d", &fileLength);
+			Serial.printlnf("Total size of file: %d", fileLength);
+			if (fileLength > 60000) // Must match the size in the JS file.
+			{
+				//Serial.printlnf("Upgrade should be called again after that");
+			}
+		}
+
+		const char part[] = "Part: ";
+		str = strstr((const char *)contentData, part);
+		if (str != NULL)
+		{
+			int prevPart = partCount;
+			str += sizeof(part) - 1;
+			sscanf(str, "%d", &partCount);
+			Serial.printlnf("Part: %d", partCount);
+			if (partCount != prevPart + 1)
+			{
+				// Problème
+				Serial.printlnf("Issue with part: %d, prevpart: %d", partCount, prevPart);
+			}
+		}
+
+// uncomment and complete to get the file name.
 // 		str = strstr((const char *)contentData, "filename=");
 // 		if(str != NULL)
 // 		{
@@ -141,7 +185,20 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 // 				uint32_t reserved3;
 // 			} module_info_t;
 
-			destinationFile = SPIFFS_open(&fs, "upgrade", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
+			if (partCount > 1)
+			{
+				// Add data to existing file.
+				destinationFile = myFileOpen(UPGRADE_FILE_NAME);
+				// Seek to the end of the file!!!
+				myFileSeek(destinationFile, 60000);
+			}
+			else
+			{
+				// Create new file
+				destinationFile = myFileOpenEmpty(UPGRADE_FILE_NAME);
+			}
+			
+
 			if (destinationFile < 0)
 			{
 				ExitMyPage(cb, cbArg, result, "Open error");
@@ -150,16 +207,22 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 
 			while (body->bytes_left)
 			{
-				written = SPIFFS_write(&fs, destinationFile, &contentData[dataPos], datalength);
+				written = myFileWrite(destinationFile, &contentData[dataPos], datalength);
+				fileBytesReceived += written;
 				if (written != datalength)
 				{
+					Serial.printlnf("Written: %d, datalength: %d", written, datalength);
 					ExitMyPage(cb, cbArg, result, "Write error 1");
 					return;
 
 				}
-				delay(100); // Test for iphone
+				
 				datalength = body->read(contentData, sizeof(contentData));
+
+				// Debugging
 				Serial.printlnf("Length = %d, Bytes left: %d", datalength, body->bytes_left);
+				//Serial.println("Data:");
+				//Serial.write(contentData, datalength);
 				if (datalength <= 0)
 				{
 					// Problem here!!!
@@ -176,8 +239,14 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 				dataPos = 0;
 			}
 
+			// Debugging
+			//Serial.println("Debug:");
+			//Serial.write(contentData, datalength);
+
 			// I need space in the contentData buffer.
-			written = SPIFFS_write(&fs, destinationFile, &contentData[dataPos], datalength - webkitformboundaryLength);
+			written = myFileWrite(destinationFile, &contentData[dataPos], datalength - webkitformboundaryLength);
+			
+			fileBytesReceived += written;
 			if (written != datalength - webkitformboundaryLength)
 			{
 				//Serial.printlnf("Written: %d, Datalength: %d", written, datalength);
@@ -206,12 +275,12 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			
 			// Search for the last expected line. Dont start at the beginning of the buffer because
 			// strstr will stop at the first 0x00 byte.
-			str = strstr((const char *)&contentData[datalength - webkitformboundaryLength], "------WebKitFormBoundary");
+			str = strstr((const char *)&contentData[datalength - webkitformboundaryLength], "------"); 
 			if (str != NULL)
 			{
 				// last line is valid!
 				dataPos = (str - (char*)contentData);
-				Serial.printlnf("DataPos of ending Webkit: %d", dataPos);
+				//Serial.printlnf("DataPos of ending Webkit: %d", dataPos);
 
 			}
 			else
@@ -221,20 +290,32 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			}
 			
 
-			written = SPIFFS_write(&fs, destinationFile, &contentData[dataPos], datalength - webkitformboundaryLength);
+			written = myFileWrite(destinationFile, &contentData[dataPos], datalength - webkitformboundaryLength);
+			fileBytesReceived += written;
 			if(written != datalength - webkitformboundaryLength)
 			{
 				ExitMyPage(cb, cbArg, result, "Write error 3");
 				return;
 			}
 
-			SPIFFS_close(&fs, destinationFile);
-			upgradeDevice = 1;
+			myFileClose(destinationFile);
+
+			Serial.printlnf("Total bytes received: %d", fileBytesReceived);
+			if (fileBytesReceived < fileLength)
+			{
+				// We'll receive the file in more than one chunk.
+				ExitMyPage(cb, cbArg, result, "Part Succeed!, waiting for next part");
+			}
+			else
+			{
+				Serial.printlnf("All data received. Device will upgrade.");
+				upgradeDevice = 1;
 			
-			// Return http 200 and an html page to let the user know that the device will upgrade soon.
-			ExitMyPage(cb, cbArg, result, "Succeed!");
-			WiFi.listen(false); // We only need that if the SYSTEM_THREAD(ENABLED); is not enabled
-			// because we wont execute the main loop
+				// Return http 200 and an html page to let the user know that the device will upgrade soon.
+				ExitMyPage(cb, cbArg, result, "Succeed!");
+				WiFi.listen(false); // We only need that if the SYSTEM_THREAD(ENABLED); is NOT enabled
+				// because we wont execute the main loop
+			}
 			return;
 		}
 		else
@@ -245,7 +326,6 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			return;
 		}
     }
-
 
 	int8_t idx = 0;
 	for (;; idx++) {
@@ -288,10 +368,14 @@ void setup()
 	System.on(all_events, handle_all_the_events);
 
 	// Uncomment to wait for a byte to be received over the serial port to begin.
-	//Serial.begin(115200);
-	//while (!Serial.available()) Particle.process();
+	Serial.begin(115200);
+	while (!Serial.available()) Particle.process();
 	Serial.printlnf("Hello SoftAP %s %s", __TIME__, __DATE__);
-	myFileSystemInit();
+	if (myFileSystemInit())
+	{
+		Serial.println("Memory Init failed");
+		while(1);
+	}
 	
 	timer1Sec = millis();
 
@@ -308,22 +392,30 @@ void loop()
 // 		timer1Sec = millis();
 // 	}
 
-
-	if (upgradeDevice)
+	//if (upgradeDevice)
+	if(Serial.read() == 'u' || upgradeDevice)
 	{
 		Serial.println("Device will upgrade itself");
 		delay(1000);
-		spiffs_file ff;
-		spiffs_stat s;
+
+		uint16_t ff;
 		uint8_t buffer[512];
-		ff = SPIFFS_open(&fs, "upgrade", SPIFFS_RDONLY, 0);
-		SPIFFS_fstat(&fs, ff, &s);
-
 		FileTransfer::Descriptor file;
+		
+		ff = myFileOpen(UPGRADE_FILE_NAME);
+		Serial.printlnf("FileID: %d", ff);
+		if (ff <= 0)
+		{
+			Serial.printlnf("Open error: %d", ff);
+			delay(500);
+			System.dfu();
+			return;
+		}
+		uint32_t filesize = myFileGetSize(ff);
+		
+		Serial.printlnf("starting flash size=%d", filesize);
 
-		Serial.printlnf("starting flash size=%d", s.sizet);
-
-		file.file_length = s.sizet;
+		file.file_length = filesize;
 		file.file_address = 0; // Automatically set to HAL_OTA_FlashAddress if store is FIRMWARE
 		file.chunk_address = 0;
 		file.chunk_size = 512; // use default
@@ -339,27 +431,32 @@ void loop()
 		int readLen = 0, totalRead = 0;
 		do
 		{
-			readLen = SPIFFS_read(&fs, ff, (u8_t *)buffer, (totalRead + sizeof(buffer) < s.sizet) ? sizeof(buffer) : s.sizet - totalRead);
-			totalRead += readLen;
-			file.chunk_size = readLen;
-			//Serial.write((const uint8_t *)buffer, readLen);
-			result = Spark_Save_Firmware_Chunk(file, buffer, NULL);
-			if (result != 0) {
-				Serial.printlnf("save chunk failed %d", result);
-				return;
+			int toRead = (totalRead + sizeof(buffer) < filesize) ? sizeof(buffer) : filesize - totalRead;
+			readLen = myFileRead(ff, buffer, toRead);
+			if (readLen == toRead)
+			{
+				totalRead += readLen;
+				file.chunk_size = readLen;
+				//Serial.write((const uint8_t *)buffer, readLen);
+				result = Spark_Save_Firmware_Chunk(file, buffer, NULL);
+				if (result != 0) {
+					Serial.printlnf("save chunk failed %d", result);
+					return;
+				}
+				file.chunk_address += file.chunk_size;
 			}
-			file.chunk_address += file.chunk_size;
-		} while (readLen > 0 && totalRead < s.sizet);
+			
+		} while (readLen > 0 && totalRead < filesize);
 
 		Serial.printlnf("TotalRead: %d", totalRead);
 
-		SPIFFS_close(&fs, ff);
-
+		myFileClose(ff);
+		upgradeDevice = 0;
 		result = Spark_Finish_Firmware_Update(file, 0x1, NULL);
 		if (result != 0) {
-			Serial.printlnf("finish failed %d", result);
+			Serial.printlnf("Failed %d", result);
 			return;
 		}
-		Serial.printlnf("update complete");
+		Serial.printlnf("Update completed");
 	}
 }
