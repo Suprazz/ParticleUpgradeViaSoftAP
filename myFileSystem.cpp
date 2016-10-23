@@ -100,7 +100,7 @@ int GetFirstFileAvailable()
 {
 	for (int i = 0; i < NumberOfElements(fileArray); i++)
 	{
-		if (fileArray[i] == NULL)
+		if (fileArray[i].isOpen() == false)
 			return i;
 	}
 	Serial.println("No more space in fileArray");
@@ -135,11 +135,6 @@ int  myFileSystemInit()
 // 	const uint8_t mosiPin = A5;
 // 	const uint8_t misoPin = A4;
 // 	const uint8_t clockPin = A3;
-
-	for (int i = 0; i < NumberOfElements(fileArray); i++)
-	{
-		fileArray[i] = NULL;
-	}
 
 	if (SD.begin(CS_MEMORY) == 0)
 	{
@@ -193,7 +188,6 @@ void myFileClose(int16_t file)
 #endif
 #ifdef INCLUDE_SD
 	fileArray[file - 1].close();
-	fileArray[file - 1] == NULL;
 #endif
 }
 
