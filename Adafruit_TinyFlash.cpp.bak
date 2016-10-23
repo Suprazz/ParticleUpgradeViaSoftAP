@@ -162,25 +162,7 @@ boolean Adafruit_TinyFlash::eraseSector(uint32_t addr) {
 	(void)spi_xfer(0         ); // lowest bits are ignored.
 	CHIP_DESELECT
 
-	if(!waitForReady(300)) return false; // Datasheet says 300ms max
-
-	writeDisable();
-
-	return true;
-}
-
-// Erase 64K block
-boolean Adafruit_TinyFlash::eraseBlock(uint32_t addr) {
-
-	if (!waitForReady() || !writeEnable()) return false;
-
-	cmd(CMD_BLOCKERASE);
-	(void)spi_xfer(addr >> 16); // Chip rounds this down to
-	(void)spi_xfer(addr >> 8); // prior 4K sector boundary;
-	(void)spi_xfer(0); // lowest bits are ignored.
-	CHIP_DESELECT
-
-	if (!waitForReady(1000)) return false; // Datasheet says 1000ms max
+	if(!waitForReady(1000L)) return false; // Datasheet says 400ms max
 
 	writeDisable();
 

@@ -35,6 +35,7 @@ const uint8_t chipSelect = D0;
 
 #ifdef USE_SPIFFS
 #include "Adafruit_TinyFlash.h"
+#include "spiffs.h"
 #define LOG_PAGE_SIZE       256
 
 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
@@ -56,10 +57,10 @@ static int32_t my_spiffs_write(uint32_t addr, uint32_t size, uint8_t *src) {
 }
 
 static int32_t my_spiffs_erase(uint32_t addr, uint32_t size) {
-//	if (flash.eraseBlock(addr))
+	if (flash.eraseBlock(addr))
+		return SPIFFS_OK;
+// 	if (flash.eraseSector(addr))
 //		return SPIFFS_OK;
- 	if (flash.eraseSector(addr))
- 		return SPIFFS_OK;
 	return SPIFFS_ERASE_ERR;
 }
 

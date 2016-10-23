@@ -365,6 +365,18 @@ void handle_all_the_events(system_event_t event, int param)
 static unsigned long timer1Sec;
 void setup()
 {
+#if CS_MEMORY == RGBR
+	RGB.control(true);
+	// Set rgb pins as output and left high...
+	pinMode(CS_MEMORY, OUTPUT);
+	digitalWrite(CS_MEMORY, HIGH);
+	pinMode(RGBG, OUTPUT);
+	digitalWrite(RGBG, HIGH);
+	// on se sert pas du RBG blue
+	pinMode(RGBB, OUTPUT);
+	digitalWrite(RGBB, HIGH);
+
+#endif
 	System.on(all_events, handle_all_the_events);
 
 	// Uncomment to wait for a byte to be received over the serial port to begin.

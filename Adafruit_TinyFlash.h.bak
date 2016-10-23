@@ -30,7 +30,6 @@
 #define CMD_READSTAT1    0x05
 #define CMD_WRITEENABLE  0x06
 #define CMD_SECTORERASE  0x20
-#define CMD_BLOCKERASE	 0xD8
 #define CMD_CHIPERASE    0x60
 #define CMD_ID           0x90
 #define CMD_WRITESTAT	 0x01
@@ -51,7 +50,6 @@ class Adafruit_TinyFlash {
 	  // Write max 256 bytes.
                     writePage(uint32_t addr, uint8_t *data, uint32_t length),
                     eraseChip(void),
-					eraseBlock(uint32_t addr),
                     eraseSector(uint32_t addr);
   boolean           beginFastRead(uint32_t addr);
   // Write any amount of data

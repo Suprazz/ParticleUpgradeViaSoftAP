@@ -169,7 +169,8 @@ typedef int16_t s16_t;
 #define SPIFFS_CFG_PHYS_SZ(ignore)        (1024*1024*1)
 #endif
 #ifndef SPIFFS_CFG_PHYS_ERASE_SZ
-#define SPIFFS_CFG_PHYS_ERASE_SZ(ignore)  (4096)
+#define SPIFFS_CFG_PHYS_ERASE_SZ(ignore)  (64*1024)
+//#define SPIFFS_CFG_PHYS_ERASE_SZ(ignore)  (4096)
 #endif
 #ifndef SPIFFS_CFG_PHYS_ADDR
 #define SPIFFS_CFG_PHYS_ADDR(ignore)      (0)
@@ -178,7 +179,8 @@ typedef int16_t s16_t;
 #define SPIFFS_CFG_LOG_PAGE_SZ(ignore)    (256)
 #endif
 #ifndef SPIFFS_CFG_LOG_BLOCK_SZ
-#define SPIFFS_CFG_LOG_BLOCK_SZ(ignore)   (4096)
+#define SPIFFS_CFG_LOG_BLOCK_SZ(ignore)   (64*1024)
+//#define SPIFFS_CFG_LOG_BLOCK_SZ(ignore)   (4096)
 #endif
 #endif
 

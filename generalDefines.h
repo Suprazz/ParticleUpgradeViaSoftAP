@@ -1,9 +1,11 @@
 #ifndef GENERAL_DEFS_H
 #define GENERAL_DEFS_H
 
-#define CS_MEMORY A7
-//#define USE_SPIFFS
-#define INCLUDE_SD
+//#define CS_MEMORY A7
+#define CS_MEMORY RGBR
+
+#define USE_SPIFFS
+//#define INCLUDE_SD
 
 #ifndef NumberOfElements
 #define NumberOfElements(array)     ((sizeof(array) / (sizeof(array[0]))))
