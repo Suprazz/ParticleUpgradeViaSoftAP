@@ -138,7 +138,7 @@ int  myFileSystemInit()
 
 	for (int i = 0; i < NumberOfElements(fileArray); i++)
 	{
-		fileArray[i] == NULL;
+		fileArray[i] = NULL;
 	}
 
 	if (SD.begin(CS_MEMORY) == 0)

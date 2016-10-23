@@ -53,20 +53,23 @@ window.addEventListener('load', function () {
 	var partNumber = 1;
 	var maxPacketSize = 60000;
 	
-	// We define what will happen if the data are successfully sent
-    XHR.addEventListener('load', function(event) {
-		//alert('Yeah! Data sent and response loaded.');
-		// If there is still data to be sent we continue.
-		if(filePosition < file.binary.length)
-		{
-			CreateBodyRequest();
+	XHR.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			// If there is still data to be sent we continue.
+			if(this.responseText == 'continue' && filePosition < file.binary.length)
+			{
+				CreateBodyRequest();
+			}
+			else
+			{
+				alert(this.responseText);
+			}
 		}
-    });
-	
-    // We define what will happen in case of error
-    XHR.addEventListener('error', function(event) {
-      alert('Oups! Something goes wrong.');
-    });
+		else if (this.readyState == 4)
+		{
+			alert("No answer when sending data. Please try again.");
+		}
+    };
 	
 	// So, if the user has selected a file
     if (file.dom.files[0]) {

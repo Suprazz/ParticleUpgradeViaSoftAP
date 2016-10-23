@@ -19,7 +19,7 @@ struct Page
 
 const char index_html[] = "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'><title>Firmware upgrade</title><link rel='stylesheet' type='text/css' href='style.css'></head><body> <p><b>Select file for firmware upgrade</b></p> <form id=\"myForm\"> <p> <input id=\"i2\" name=\"myFile\" type=\"file\"> </p> <input type=\"submit\" value=\"Begin upgrade\" id=\"submit\"/></form><script src='script.js'></script></body></html>";
 const char style_css[] = "html{height:100%;margin:auto;background-color:white}body{box-sizing:border-box;min-height:100%;padding:20px;background-color:#1aabe0;font-family:'Lucida Sans Unicode','Lucida Grande',sans-serif;font-weight:normal;color:white;margin-top:0;margin-left:auto;margin-right:auto;margin-bottom:0;max-width:400px;text-align:center;border:1px solid #6e6e70;border-radius:4px}div{margin-top:25px;margin-bottom:25px}h1{margin-top:25px;margin-bottom:25px}button{border-color:#1c75be;background-color:#1c75be;color:white;border-radius:5px;height:30px;font-size:15px;font-weight:bold}button.input-helper{background-color:#bebebe;border-color:#bebebe;color:#6e6e70;margin-left:3px}button:disabled{background-color:#bebebe;border-color:#bebebe;color:white}input[type='text'],input[type='password']{background-color:white;color:#6e6e70;border-color:white;border-radius:5px;height:25px;text-align:center;font-size:15px}input:disabled{background-color:#bebebe;border-color:#bebebe}input[type='radio']{position:relative;bottom:-0.33em;margin:0;border:0;height:1.5em;width:15%}label{padding-top:7px;padding-bottom:7px;padding-left:5%;display:inline-block;width:80%;text-align:left}input[type='radio']:checked+label{font-weight:bold;color:#1c75be}.scanning-error{font-weight:bold;text-align:center}.radio-div{box-sizing:border-box;margin:2px;margin-left:auto;margin-right:auto;background-color:white;color:#6e6e70;border:1px solid #6e6e70;border-radius:3px;width:100%;padding:5px}#networks-div{margin-left:auto;margin-right:auto;text-align:left}#device-id{text-align:center}#scan-button{min-width:100px}#connect-button{display:block;min-width:100px;margin-top:10px;margin-left:auto;margin-right:auto;margin-bottom:20px}#password{margin-top:20px;margin-bottom:10px}";
-const char script_js[] = "window.addEventListener(\"load\",function(){function d(){function i(){b=\"\",b+=\"------\"+e+\"\\r\\n\",b+='content-disposition: form-data; name=\"'+a.dom.name+'\"; filename=\"'+a.dom.files[0].name+'\"\\r\\n',b+=\"Content-Type: \"+a.dom.files[0].type+\"\\r\\n\",b+=\"FileSize: \"+a.binary.length+\"\\r\\n\",b+=\"Part: \"+g+\"\\r\\n\",g+=1,b+=\"\\r\\n\";var d=0;d=a.binary.length-f>h?h:a.binary.length-f,b+=a.binary.substr(f,d),f+=d,b+=\"\\r\\n------\"+e+\"--\\r\\n\",c.open(\"POST\",\"http://192.168.0.1/upgrade\"),c.setRequestHeader(\"Content-Type\",\"multipart/form-data; boundary=\"+e),c.sendAsBinary(b)}if(!a.binary&&a.dom.files.length>0)return void setTimeout(d,10);var c=new XMLHttpRequest,e=\"blob\",f=0,g=1,h=6e4;c.addEventListener(\"load\",function(b){f<a.binary.length&&i()}),c.addEventListener(\"error\",function(a){alert(\"Oups! Something goes wrong.\")}),a.dom.files[0]&&f<a.binary.length&&i()}var a={dom:document.getElementById(\"i2\"),binary:null,length:0},b=\"\",c=new FileReader;c.addEventListener(\"load\",function(){a.binary=c.result}),a.dom.files[0]&&(c.readAsBinaryString(a.dom.files[0]),a.length=c.length),a.dom.addEventListener(\"change\",function(){c.readyState===FileReader.LOADING&&c.abort(),c.readAsBinaryString(a.dom.files[0]),a.length=c.length}),document.getElementById(\"myForm\").addEventListener(\"submit\",function(a){a.preventDefault(),d()}),XMLHttpRequest.prototype.sendAsBinary=function(a){function b(a){return 255&a.charCodeAt(0)}var c=Array.prototype.map.call(a,b),d=new Uint8Array(c);this.send(d.buffer)}});";
+const char script_js[] = "window.addEventListener(\"load\",function(){function d(){function i(){b=\"\",b+=\"------\"+e+\"\\r\\n\",b+='content-disposition: form-data; name=\"'+a.dom.name+'\"; filename=\"'+a.dom.files[0].name+'\"\\r\\n',b+=\"Content-Type: \"+a.dom.files[0].type+\"\\r\\n\",b+=\"FileSize: \"+a.binary.length+\"\\r\\n\",b+=\"Part: \"+g+\"\\r\\n\",g+=1,b+=\"\\r\\n\";var d=0;d=a.binary.length-f>h?h:a.binary.length-f,b+=a.binary.substr(f,d),f+=d,b+=\"\\r\\n------\"+e+\"--\\r\\n\",c.open(\"POST\",\"http://192.168.0.1/upgrade\"),c.setRequestHeader(\"Content-Type\",\"multipart/form-data; boundary=\"+e),c.sendAsBinary(b)}if(!a.binary&&a.dom.files.length>0)return void setTimeout(d,10);var c=new XMLHttpRequest,e=\"blob\",f=0,g=1,h=6e4;c.onreadystatechange=function(){4==this.readyState&&200==this.status?\"continue\"==this.responseText&&f<a.binary.length?i():alert(this.responseText):4==this.readyState&&alert(\"No answer when sending data. Please try again.\")},a.dom.files[0]&&f<a.binary.length&&i()}var a={dom:document.getElementById(\"i2\"),binary:null,length:0},b=\"\",c=new FileReader;c.addEventListener(\"load\",function(){a.binary=c.result}),a.dom.files[0]&&(c.readAsBinaryString(a.dom.files[0]),a.length=c.length),a.dom.addEventListener(\"change\",function(){c.readyState===FileReader.LOADING&&c.abort(),c.readAsBinaryString(a.dom.files[0]),a.length=c.length}),document.getElementById(\"myForm\").addEventListener(\"submit\",function(a){a.preventDefault(),d()}),XMLHttpRequest.prototype.sendAsBinary=function(a){function b(a){return 255&a.charCodeAt(0)}var c=Array.prototype.map.call(a,b),d=new Uint8Array(c);this.send(d.buffer)}});";
 const char txtPlain[] = "text/plain";
 
 Page myPages[] = {
@@ -32,16 +32,19 @@ Page myPages[] = {
 FileTransfer::Descriptor file;
 char upgradeDevice = 0;
 static int fileLength;
-void ExitMyPage(ResponseCallback* cb, void* cbArg, Writer* result, const char * str)
+static int partCount;
+void ExitMyPage(ResponseCallback* cb, void* cbArg, Writer* result, const char * str, bool error)
 {
 	Serial.println(str);
+	if (error)
+		partCount = 0;
 	cb(cbArg, 0, 200, txtPlain, nullptr);
 	result->write(str);
 }
 
 void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Writer* result, void* reserved)
 {
-	static int partCount;
+	
 	static int fileBytesReceived;
 
 	String urlString = String(url);
@@ -89,7 +92,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 		if (str == NULL)
 		{
 
-			ExitMyPage(cb, cbArg, result, "Unexpected data");
+			ExitMyPage(cb, cbArg, result, "Unexpected data", true);
 			Serial.write(contentData, datalength);
 			return;
 		}
@@ -113,7 +116,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 		}
 		else
 		{
-			ExitMyPage(cb, cbArg, result, "Cannot find the length of the first line...");
+			ExitMyPage(cb, cbArg, result, "Cannot find the length of the first line...", true);
 			return;
 		}
 	
@@ -201,7 +204,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 
 			if (destinationFile < 0)
 			{
-				ExitMyPage(cb, cbArg, result, "Open error");
+				ExitMyPage(cb, cbArg, result, "Open error", true);
 				return;
 			}
 
@@ -212,7 +215,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 				if (written != datalength)
 				{
 					Serial.printlnf("Written: %d, datalength: %d", written, datalength);
-					ExitMyPage(cb, cbArg, result, "Write error 1");
+					ExitMyPage(cb, cbArg, result, "Write error 1", true);
 					return;
 
 				}
@@ -226,7 +229,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 				if (datalength <= 0)
 				{
 					// Problem here!!!
-					ExitMyPage(cb, cbArg, result, "body->readerror");
+					ExitMyPage(cb, cbArg, result, "Transfer error, please try again", true);
 					return;
 				}
 				// Here I need to check that I will read at least webkitformboundaryLength because
@@ -250,7 +253,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			if (written != datalength - webkitformboundaryLength)
 			{
 				//Serial.printlnf("Written: %d, Datalength: %d", written, datalength);
-				ExitMyPage(cb, cbArg, result, "Write error 2");
+				ExitMyPage(cb, cbArg, result, "Write error 2", true);
 				return;
 			}
 
@@ -285,7 +288,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			}
 			else
 			{
-				ExitMyPage(cb, cbArg, result, "Unexpected last line of data");
+				ExitMyPage(cb, cbArg, result, "Unexpected last line of data", true);
 				return;
 			}
 			
@@ -294,7 +297,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			fileBytesReceived += written;
 			if(written != datalength - webkitformboundaryLength)
 			{
-				ExitMyPage(cb, cbArg, result, "Write error 3");
+				ExitMyPage(cb, cbArg, result, "Write error 3", true);
 				return;
 			}
 
@@ -304,7 +307,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 			if (fileBytesReceived < fileLength)
 			{
 				// We'll receive the file in more than one chunk.
-				ExitMyPage(cb, cbArg, result, "Part Succeed!, waiting for next part");
+				ExitMyPage(cb, cbArg, result, "continue", false);
 			}
 			else
 			{
@@ -312,7 +315,9 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 				upgradeDevice = 1;
 			
 				// Return http 200 and an html page to let the user know that the device will upgrade soon.
-				ExitMyPage(cb, cbArg, result, "Succeed!");
+				ExitMyPage(cb, cbArg, result, "Upgrade sent successfully!", false);
+				delay(1000);
+				// Wait before disabling wifi because the user wont receive the answer that all data has been transfered.
 				WiFi.listen(false); // We only need that if the SYSTEM_THREAD(ENABLED); is NOT enabled
 				// because we wont execute the main loop
 			}
@@ -322,7 +327,7 @@ void myPage(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Wr
 		{
 			Serial.println("Cannot find the beginning of the data");
 			// Leave...
-			cb(cbArg, 0, 404, nullptr, nullptr);
+			ExitMyPage(cb, cbArg, result, "Cannot find the beginning of the data", true);
 			return;
 		}
     }
@@ -408,7 +413,7 @@ void loop()
 	if(Serial.read() == 'u' || upgradeDevice)
 	{
 		Serial.println("Device will upgrade itself");
-		delay(1000);
+		//delay(1000);
 
 		uint16_t ff;
 		uint8_t buffer[512];
@@ -419,8 +424,8 @@ void loop()
 		if (ff <= 0)
 		{
 			Serial.printlnf("Open error: %d", ff);
-			delay(500);
-			System.dfu();
+			upgradeDevice = 0;
+
 			return;
 		}
 		uint32_t filesize = myFileGetSize(ff);
